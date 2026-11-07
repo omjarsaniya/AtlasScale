@@ -1,4 +1,8 @@
 from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+from sqlalchemy import text
+
+from atlasscale.database.connection import engine
 
 from atlasscale.schemas import JobCreateRequest
 from atlasscale.postgres_repository import PostgresJobRepository
@@ -15,11 +19,27 @@ job_repository = PostgresJobRepository()
 # Inject repository into service
 job_service = JobService(job_repository)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
+
+    print("AtlasScale connected to PostgreSQL.")
+
+    yield
+
+    # Shutdown
+    engine.dispose()
+
+    print("AtlasScale database connections closed.")
+
 
 app = FastAPI(
     title="AtlasScale API",
     description="A job execution and state management system",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 

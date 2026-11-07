@@ -19,7 +19,8 @@ class Base(DeclarativeBase):
 
 engine = create_engine(
     DATABASE_URL,
-    echo=True,
+    echo=os.getenv("SQLALCHEMY_ECHO", "false").lower() == "true",
+    pool_pre_ping=True,
 )
 
 SessionLocal = sessionmaker(

@@ -45,3 +45,32 @@ class JobService:
             )
 
         return job
+    
+    def start_job(self, job_id: str) -> Job:
+        job = self.get_job(job_id)
+
+        job.start()
+
+        self.repository.save(job)
+
+        return job
+    
+    
+    def complete_job(self, job_id: str) -> Job:
+        job = self.get_job(job_id)
+        
+        job.complete()
+
+        self.repository.save(job)
+
+        return job
+                
+    
+    def fail_job(self, job_id: str) -> Job:
+        job = self.get_job(job_id)
+
+        job.fail()
+
+        self.repository.save(job)
+
+        return job            

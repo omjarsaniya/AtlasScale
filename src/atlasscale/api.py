@@ -100,3 +100,87 @@ def get_job_endpoint(job_id: str, job_service: JobService = Depends(get_job_serv
         "priority": job.priority,
         "status": job.status,
     }
+    
+    
+@app.post("/jobs/{job_id}/start")
+def start_job_endpoint(
+    job_id: str,
+    job_service: JobService = Depends(get_job_service),
+):
+    try:
+        job = job_service.start_job(job_id)
+
+    except JobNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        ) from exc
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+
+    return {
+        "job_id": job.job_id,
+        "task": job.task,
+        "priority": job.priority,
+        "status": job.status,
+    }
+    
+    
+@app.post("/jobs/{job_id}/complete")
+def complete_job_endpoint(
+    job_id: str,
+    job_service: JobService = Depends(get_job_service),
+):
+    try:
+        job = job_service.complete_job(job_id)
+
+    except JobNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        ) from exc
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+
+    return {
+        "job_id": job.job_id,
+        "task": job.task,
+        "priority": job.priority,
+        "status": job.status,
+    }
+    
+    
+@app.post("/jobs/{job_id}/fail")
+def fail_job_endpoint(
+    job_id: str,
+    job_service: JobService = Depends(get_job_service),
+):
+    try:
+        job = job_service.fail_job(job_id)
+
+    except JobNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        ) from exc
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+
+    return {
+        "job_id": job.job_id,
+        "task": job.task,
+        "priority": job.priority,
+        "status": job.status,
+    }

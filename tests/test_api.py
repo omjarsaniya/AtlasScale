@@ -93,3 +93,120 @@ def test_create_job_with_invalid_priority(client):
     )
 
     assert response.status_code == 422
+    
+
+def test_start_job(client):
+    # Create a job
+    create_response = client.post(
+        "/jobs",
+        json={
+            "job_id": "job-api-start-001",
+            "task": "generate_report",
+            "priority": 2,
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    # Start the job
+    response = client.post("/jobs/job-api-start-001/start")
+
+    assert response.status_code == 200
+    assert response.json()["job_id"] == "job-api-start-001"
+    assert response.json()["status"] == "running"
+    
+    
+def test_complete_job(client):
+    # Create a job
+    create_response = client.post(
+        "/jobs",
+        json={
+            "job_id": "job-api-complete-001",
+            "task": "generate_report",
+            "priority": 2,
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    # Start the job
+    start_response = client.post(
+        "/jobs/job-api-complete-001/start"
+    )
+
+    assert start_response.status_code == 200
+    assert start_response.json()["status"] == "running"
+
+    # Complete the job
+    response = client.post(
+        "/jobs/job-api-complete-001/complete"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["job_id"] == "job-api-complete-001"
+    assert response.json()["status"] == "completed"
+    
+    
+def test_fail_job(client):
+    # Create a job
+    create_response = client.post(
+        "/jobs",
+        json={
+            "job_id": "job-api-fail-001",
+            "task": "process_file",
+            "priority": 2,
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    # Start the job
+    start_response = client.post(
+        "/jobs/job-api-fail-001/start"
+    )
+
+    assert start_response.status_code == 200
+    assert start_response.json()["status"] == "running"
+
+    # Fail the job
+    response = client.post(
+        "/jobs/job-api-fail-001/fail"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["job_id"] == "job-api-fail-001"
+    assert response.json()["status"] == "failed"
+    
+    
+def test_start_already_running_job_returns_422(client):
+    client.post(
+        "/jobs",
+        json={
+            "job_id": "job-invalid-start-001",
+            "task": "generate_report",
+        },
+    )
+
+    client.post("/jobs/job-invalid-start-001/start")
+
+    response = client.post(
+        "/jobs/job-invalid-start-001/start"
+    )
+
+    assert response.status_code == 422
+
+
+def test_complete_pending_job_returns_422(client):
+    client.post(
+        "/jobs",
+        json={
+            "job_id": "job-invalid-complete-001",
+            "task": "process_file",
+        },
+    )
+
+    response = client.post(
+        "/jobs/job-invalid-complete-001/complete"
+    )
+
+    assert response.status_code == 422

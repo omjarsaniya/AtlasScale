@@ -1,3 +1,8 @@
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from atlasscale.database.dependencies import get_db
+
 from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
 from sqlalchemy import text
@@ -12,12 +17,6 @@ from atlasscale.services import (
     JobNotFoundError,
 )
 
-
-# Create repository
-job_repository = PostgresJobRepository()
-
-# Inject repository into service
-job_service = JobService(job_repository)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,6 +42,10 @@ app = FastAPI(
 )
 
 
+def get_job_service(db: Session = Depends(get_db)) -> JobService:
+    repository = PostgresJobRepository(db)
+    return JobService(repository)
+
 @app.get("/")
 def health_check():
     return {
@@ -52,7 +55,7 @@ def health_check():
 
 
 @app.post("/jobs", status_code=201)
-def create_job_endpoint(request: JobCreateRequest):
+def create_job_endpoint(request: JobCreateRequest, job_service: JobService = Depends(get_job_service)):
     try:
         job = job_service.create_job(
             job_id=request.job_id,
@@ -81,7 +84,7 @@ def create_job_endpoint(request: JobCreateRequest):
 
 
 @app.get("/jobs/{job_id}")
-def get_job_endpoint(job_id: str):
+def get_job_endpoint(job_id: str, job_service: JobService = Depends(get_job_service)):
     try:
         job = job_service.get_job(job_id)
 

@@ -10,8 +10,20 @@ from atlasscale.postgres_repository import PostgresJobRepository
 
 
 @pytest.fixture
-def repository():
-    return PostgresJobRepository()
+def db_session():
+    session = SessionLocal()
+
+    try:
+        yield session
+
+    finally:
+        session.rollback()
+        session.close()
+
+
+@pytest.fixture
+def repository(db_session):
+    return PostgresJobRepository(db_session)
 
 
 @pytest.fixture
